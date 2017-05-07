@@ -149,7 +149,7 @@ async def banner_get_api(request):
         banners = await redis.get('banners')
         banners_dict = ast.literal_eval(banners)
         banners_list = banners.get('_banners')
-        return web.json_response(banners_list)
+        return web.json_response(sorted(banners_list, key=lambda x: int(x['num'])))
 
 @require_admin_login
 async def banner_add_api(request):
@@ -166,7 +166,8 @@ async def banner_del_api(request):
     img = request.rel_url.query['name']  # 待删除banner的图片外链
     pool = await aioredis.create_pool(REDISHOST, REDISPORT)
     async with pool as redis:
-        banners_dict = await redis.get('banners')
+        banners = await redis.get('banners')
+        banners_dict = ast.literal_eval(banners)
         banners_list = banners_dict.get('_banners')
         for banner in banners_list:
             if banner['img'] == img:
@@ -175,9 +176,52 @@ async def banner_del_api(request):
                 return web.json_response({})
             return web.Response(b'{}', content_type='application/json', status=404)
 
+@require_admin_login
+async def banner_update_api(request):
+    json_data = await request.json()
+    img = json_data.get('img')
+    num = json_data.get('num')
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        banners = await redis.get('banners')
+        banners_dict = ast.literal_eval(banners)
+        banners_list = banners_dict.get('_banners')
+        for banner in banners_list:
+            if banner['img'] == img:
+                banner['num'] = num  # 更新排序num
+                await redis.set('banners', banners_list)
+                return web.json_response({})
+            return web.Response(b'{}', content_type='application/json', status=404)
+
+async def calendar_get_api(request):
+    """
+    key: calendar
+    value: {
+        'img': '校历图片七牛外链',
+        'size': '校历图片大小',
+        'update': '更新时间戳'
+    }
+    """
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        calendar = await redis.get('calendar')
+        return web.json_response(ast.literal_eval(calendar))
+
+@require_admin_login
+async def calendar_update_api(request):
+    json_data = await request.json()
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        await redis.set('calendar', json_data.update({'update': time.time()}))
+        return web.Response(b'{}', content_type='application/json', status=201)
+
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
 api.router.add_route('DELETE', '/product/', product_del_api, name='product_del_api')
 api.router.add_route('GET', '/banner/', banner_get_api, name='banner_get_api')
 api.router.add_route('POST', '/banner/', banner_add_api, name='banner_add_api')
+api.router.add_route('DELETE', '/banner/', banner_del_api, name='banner_del_api')
+api.router.add_route('PUT', '/banner/', banner_update_api, name='banner_update_api')
+api.router.add_route('GET', '/calendar/', calendar_get_api, name='calendar_get_api')
+api.router.add_route('POST', '/calendar/', calendar_update_api, name='calendar_update_api')
