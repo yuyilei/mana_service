@@ -1,5 +1,5 @@
 from service import create_app, app
-from .test_apartment_api import test_apartment_api
+from .test_mana_api import test_mana_api
 
 if __name__ == '__main__':
-    test_apartment_api(app)
+    test_mana_api(app)

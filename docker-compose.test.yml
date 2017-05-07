@@ -1,0 +1,13 @@
+mana_api_test:
+    build: .
+    env_file:
+        - container.test.env
+    command: python -m tests.__init__
+    links:
+        - redis1
+
+redis1:
+    image: redis
+    command: redis-server --port 6384 
+    ports:
+        - "7384:6384"
