@@ -215,6 +215,29 @@ async def calendar_update_api(request):
         await redis.set('calendar', json_data.update({'update': time.time()}))
         return web.Response(b'{}', content_type='application/json', status=201)
 
+async def start_get_api(request):
+    """
+    key: start
+    value: {
+        'img': '闪屏图片七牛外链',
+        'url': '图片指向的链接',
+        'update': '闪屏更新时间戳'
+    }
+    """
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        start = await redis.get('start')
+        return web.json_response(ast.literal_eval(start))
+
+@require_admin_login
+async def start_update_api(request):
+    json_data = await request.json()
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        update = time.time()
+        await redis.set('start', json_data.append({'update': update}))
+        return web.Response(b'{}', content_type='application/json', status=201)
+
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
@@ -225,3 +248,5 @@ api.router.add_route('DELETE', '/banner/', banner_del_api, name='banner_del_api'
 api.router.add_route('PUT', '/banner/', banner_update_api, name='banner_update_api')
 api.router.add_route('GET', '/calendar/', calendar_get_api, name='calendar_get_api')
 api.router.add_route('POST', '/calendar/', calendar_update_api, name='calendar_update_api')
+api.router.add_route('GET', '/start/', start_get_api, name='start_get_api')
+api.router.add_route('POST', '/start/', start_get_api, name='start_get_api')
