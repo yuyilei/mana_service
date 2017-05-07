@@ -129,6 +129,7 @@ async def product_del_api(request):
                 products_dict['update'] = time.time()
                 await redis.set('products', products_dict)
                 return web.json_response({})
+            return web.Response(b'{}', content_type='application/json', status=404)
 
 async def banner_get_api(request):
     """
@@ -145,17 +146,38 @@ async def banner_get_api(request):
     """
     pool = await aioredis.create_pool(REDISHOST, REDISPORT)
     async with pool as redis:
-        banners = await redis.hgetall('banners')
+        banners = await redis.get('banners')
         banners_dict = ast.literal_eval(banners)
         banners_list = banners.get('_banners')
         return web.json_response(banners_list)
 
+@require_admin_login
 async def banner_add_api(request):
     json_data = await request.json()
     pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        update = time.time()
+        json_data.update({'update': update})
+        await redis.set('banners', json_data)
+        return web.Response(body=b'{}', content_type='application/json', status=201)
+
+@require_admin_login
+async def banner_del_api(request):
+    img = request.rel_url.query['name']  # 待删除banner的图片外链
+    pool = await aioredis.create_pool(REDISHOST, REDISPORT)
+    async with pool as redis:
+        banners_dict = await redis.get('banners')
+        banners_list = banners_dict.get('_banners')
+        for banner in banners_list:
+            if banner['img'] == img:
+                banners_list.remove(banner)
+                await redis.set('banners', banners_list)
+                return web.json_response({})
+            return web.Response(b'{}', content_type='application/json', status=404)
 
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
 api.router.add_route('DELETE', '/product/', product_del_api, name='product_del_api')
 api.router.add_route('GET', '/banner/', banner_get_api, name='banner_get_api')
+api.router.add_route('POST', '/banner/', banner_add_api, name='banner_add_api')
