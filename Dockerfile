@@ -2,7 +2,7 @@
 FROM python:3.6
 MAINTAINER muxistudio <muxistudio@qq.com>
 # environment setting
-ENV DEPLOY_PATH /ele_api
+ENV DEPLOY_PATH /mana_api
 # run command in container
 RUN mkdir -p $DEPLOY_PATH
 WORKDIR $DEPLOY_PATH
