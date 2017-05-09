@@ -32,6 +32,17 @@ def test_mana_api(app):
                 assert resp.status == 201
                 print('... test banner post api [OK]')
 
+            async def _test_banner_update_api():
+                nonlocal client
+                auth_header = await get_auth_header()
+                post_data = {
+                        'img': 'https://y.gtimg.cn/music/photo_new/T002R300x300M000001Fk5RB3SErqf.jpg',
+                        'num': '2'
+                }
+                resp = await client.put('/api/banner/', data=json.dumps(post_data), headers=auth_header)
+                assert resp.status == 200
+                print('... test banner update api [OK]')
+
             async def _test_banner_get_api():
                 nonlocal client
                 resp = await client.get('/api/banner/')
@@ -101,6 +112,7 @@ def test_mana_api(app):
 
             loop.run_until_complete(_test_apartment_api())
             loop.run_until_complete(_test_banner_post_api())
+            loop.run_until_complete(_test_banner_update_api())
             loop.run_until_complete(_test_banner_get_api())
             loop.run_until_complete(_test_banner_del_api())
             loop.run_until_complete(_test_product_put_api())

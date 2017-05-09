@@ -195,9 +195,10 @@ async def banner_update_api(request):
     banners_dict = eval(banners)
     banners_list = banners_dict.get('_banners')
     for banner in banners_list:
-        if banner['img'] == img:
+        if banner.get('img') == img:
             banner['num'] = num  # 更新排序num
-            await redis.set('banners', banners_list)
+            banners_dict['_banners'] = banners_list
+            await redis.set('banners', str(banners_dict))
             await close_redis(redis)
             return web.json_response({})
         await close_redis(redis)
