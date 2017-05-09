@@ -151,7 +151,6 @@ async def banner_get_api(request):
     """
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     banners = await redis.get('banners')
-    # banners_dict = ast.literal_eval(banners)
     banners_dict = eval(banners or "{'_banners': []}")
     banners_list = banners_dict.get('_banners')
     await close_redis(redis)
@@ -193,7 +192,7 @@ async def banner_update_api(request):
     num = json_data.get('num')
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     banners = await redis.get('banners')
-    banners_dict = ast.literal_eval(banners)
+    banners_dict = eval(banners)
     banners_list = banners_dict.get('_banners')
     for banner in banners_list:
         if banner['img'] == img:

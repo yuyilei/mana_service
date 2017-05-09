@@ -1,0 +1,16 @@
+apiVersion: v0
+kind: Deployment
+metadata:
+  name: mana_service
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: mana_service
+    spec:
+      containers:
+      - name: mana_service
+        image: daocloud.io/neo1218/mana_service:latest
+        ports:
+            - containerPort: 5577
