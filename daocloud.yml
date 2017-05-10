@@ -1,0 +1,22 @@
+version: 3.0
+
+stages:
+   - 测试阶段
+   - 构建阶段
+   - 发布阶段
+
+默认测试任务:
+   stage: 测试阶段
+   job_type: test
+   label: develop
+   image: ubuntu
+   script:
+      - echo This is a default test.
+
+默认构建任务:
+   stage: 构建阶段
+   job_type: image_build
+   label: release-image
+   build_dir: /
+   dockerfile_path: /Dockerfile
+   cache: true
