@@ -1,15 +1,20 @@
-mana_api:
-    build: .
-    env_file:
-        - container.env
-    command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
-    ports:
-        - "5577:8080"
-    links:
-        - redis1
+version: "2"
 
-redis1:
-    image: redis
-    command: redis-server --port 6384 
-    ports:
-        - "7384:6384"
+services:
+
+    mana_api:
+        # build: .
+        image: daocloud.io/neo1218/mana_service
+        env_file:
+            - container.env
+        command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
+        ports:
+            - "5577:8080"
+        links:
+            - redis1
+    
+    redis1:
+        image: redis
+        command: redis-server --port 6384 
+        ports:
+            - "7384:6384"

@@ -179,7 +179,8 @@ async def banner_del_api(request):
     for banner in banners_list:
         if banner['img'] == img:
             banners_list.remove(banner)
-            await redis.set('banners', str(banners_list))
+            banners_dict['_banners'] = banners_list
+            await redis.set('banners', str(banners_dict))
             await close_redis(redis)
             return web.json_response({})
         await close_redis(redis)
