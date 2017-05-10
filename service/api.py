@@ -7,7 +7,7 @@ from aiohttp.web import Response
 from .decorator import require_admin_login
 
 REDISHOST = os.getenv('REDISHOST') or 'redis1'
-REDISPORT = int(os.getenv('REDISPORT') or '6384')
+REDISPORT = int(os.getenv('REDISPORT') or '7384')
 
 api = web.Application()
 
