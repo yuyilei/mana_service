@@ -115,6 +115,7 @@ async def product_add_api(request):
     products_dict['_products'].append(json_data)
     products_dict['update'] = time.time()
     await redis.set('products', str(products_dict))
+    await redis.save()
     await close_redis(redis)
     return web.json_response({})
 
@@ -131,6 +132,7 @@ async def product_del_api(request):
             products_dict['_products'] = products_list
             products_dict['update'] = time.time()
             await redis.set('products', str(products_dict))
+            await redis.save()
             await close_redis(redis)
             return web.json_response({})
         await close_redis(redis)
@@ -166,6 +168,7 @@ async def banner_add_api(request):
     banners_dict = eval(banners or "{'_banners': []}")
     banners_dict['_banners'].append(json_data)
     await redis.set('banners', str(banners_dict))
+    await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
 
@@ -181,6 +184,7 @@ async def banner_del_api(request):
             banners_list.remove(banner)
             banners_dict['_banners'] = banners_list
             await redis.set('banners', str(banners_dict))
+            await redis.save()
             await close_redis(redis)
             return web.json_response({})
         await close_redis(redis)
@@ -200,6 +204,7 @@ async def banner_update_api(request):
             banner['num'] = num  # 更新排序num
             banners_dict['_banners'] = banners_list
             await redis.set('banners', str(banners_dict))
+            await redis.save()
             await close_redis(redis)
             return web.json_response({})
         await close_redis(redis)
@@ -224,6 +229,7 @@ async def calendar_update_api(request):
     json_data = await request.json()
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     await redis.set('calendar', str(json_data.update({'update': time.time()})))
+    await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
 
@@ -247,6 +253,7 @@ async def start_update_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     update = time.time()
     await redis.set('start', str(json_data.update({'update': update})))
+    await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
 
