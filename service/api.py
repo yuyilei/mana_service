@@ -135,8 +135,8 @@ async def product_del_api(request):
             await redis.save()
             await close_redis(redis)
             return web.json_response({})
-        await close_redis(redis)
-        return web.Response(body=b'{}', content_type='application/json', status=404)
+    await close_redis(redis)
+    return web.Response(body=b'{}', content_type='application/json', status=404)
 
 async def banner_get_api(request):
     """
@@ -187,8 +187,8 @@ async def banner_del_api(request):
             await redis.save()
             await close_redis(redis)
             return web.json_response({})
-        await close_redis(redis)
-        return web.Response(body=b'{}', content_type='application/json', status=404)
+    await close_redis(redis)
+    return web.Response(body=b'{}', content_type='application/json', status=404)
 
 @require_admin_login
 async def banner_update_api(request):
@@ -207,8 +207,8 @@ async def banner_update_api(request):
             await redis.save()
             await close_redis(redis)
             return web.json_response({})
-        await close_redis(redis)
-        return web.Response(body=b'{}', content_type='application/json', status=404)
+    await close_redis(redis)
+    return web.Response(body=b'{}', content_type='application/json', status=404)
 
 async def calendar_get_api(request):
     """
