@@ -79,12 +79,54 @@ apartment_list = [
         },
 ]
 
+site_list = [
+    {
+        "site": "信息门户",
+        "url": "http://portal.ccnu.edu.cn/"
+    },
+    {
+        "site": "学生信息服务平台",
+        "url": "http://xssw.ccnu.edu.cn/zfca/login"
+    },
+    {
+        "site": "微课程平台",
+        "url": "http://wk.ccnu.edu.cn/hsd-web/index.do"
+    },
+    {
+        "site": "素质课程管理平台",
+        "url": "http://122.204.187.9/jwglxt/xtgl/dl_loginForward.html"
+    },
+    {
+        "site": "教务处",
+        "url": "http://jwc.ccnu.edu.cn/"
+    },
+    {
+        "site": "网上自主缴费平台",
+        "url": "http://218.199.196.90/"
+    },
+    {
+        "site": "校医院",
+        "url": "http://hosp.ccnu.edu.cn/"
+    },
+    {
+        "site": "图书馆研习室预约",
+        "url": "http://202.114.34.12:8088/reserveSystem/readerIndex.html"
+    },
+    {
+        "site": "尔雅课",
+        "url": "http://ccnu.benke.chaoxing.com/"
+    },
+]
+
 async def close_redis(redis):
     redis.close()
     await redis.wait_closed()
 
 async def apartment_info_api(request):
     return web.json_response(apartment_list)
+
+async def website_info_api(request):
+    return web.json_response(site_list)
 
 async def product_get_api(request):
     """
@@ -346,6 +388,7 @@ async def del_patch_api(request):
     return web.Response(body=b'{}', content_type='application/json', status=404)
 
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
+api.router.add_route('GET', '/site/', website_info_api, name='website_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
 api.router.add_route('DELETE', '/product/', product_del_api, name='product_del_api')
