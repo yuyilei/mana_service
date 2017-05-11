@@ -285,9 +285,9 @@ async def start_get_api(request):
     }
     """
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
-    start = await redis.get('start')
+    start = eval(await redis.get('start') or {})
     await close_redis(redis)
-    return web.json_response(start.decode())
+    return web.json_response(start)
 
 @require_admin_login
 async def start_update_api(request):
