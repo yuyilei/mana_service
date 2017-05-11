@@ -257,6 +257,49 @@ async def start_update_api(request):
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
 
+async def app_get_api(request):
+    """
+    key: apps
+    value: [{ "name": "", "update": "", "version": "", "download": "", "intro": "" }]
+    """
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    apps = eval(await redis.get("apps") or '[]')
+    await close_redis()
+    return web.json_response(apps)
+
+async def get_latest_app_api(request):
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    apps = await redis.get("apps")
+    await close_redis()
+    if apps:
+        apps_list = eval(apps)
+        return web.json_response(apps_list[-1])
+    return web.json_response({})
+
+@require_admin_login
+async def add_app_api(request):
+    json_data = await request.json()
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    apps = eval(await redis.get("apps") or '[]')
+    apps.append(json_data)
+    await close_redis()
+    return web.Response(body=b"{'msg': 'add new version data'}",
+            content_type='application/json', status=201)
+
+@require_admin_login
+async def del_app_api(request):
+    version = request.match_info.get('version')
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    apps = eval(await redis.get("apps") or '[]')
+    for app in apps:
+        if app['version'] == version:
+            apps.remove(app)
+            await redis.set("apps", str(apps))
+            await close_redis()
+            return web.json_response({})
+    await close_redis()
+    return web.Response(body=b'{}', content_type='application/json', status=404)
+
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
@@ -269,3 +312,7 @@ api.router.add_route('GET', '/calendar/', calendar_get_api, name='calendar_get_a
 api.router.add_route('POST', '/calendar/', calendar_update_api, name='calendar_update_api')
 api.router.add_route('GET', '/start/', start_get_api, name='start_get_api')
 api.router.add_route('POST', '/start/', start_update_api, name='start_update_api')
+api.router.add_route('GET', '/api/app/', app_get_api, name='app_get_api')
+api.router.add_route('GET', '/api/app/latest/', get_latest_app_api, name='get_latest_app_api')
+api.router.add_route('POST', '/api/app/', add_app_api, name='add_app_api')
+api.router.add_route('DELETE', '/api/app/{version}/', del_app_api, name='del_app_api')
