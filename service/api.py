@@ -264,13 +264,13 @@ async def app_get_api(request):
     """
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     apps = eval(await redis.get("apps") or '[]')
-    await close_redis()
+    await close_redis(redis)
     return web.json_response(apps)
 
 async def get_latest_app_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     apps = await redis.get("apps")
-    await close_redis()
+    await close_redis(redis)
     if apps:
         apps_list = eval(apps)
         return web.json_response(apps_list[-1])
@@ -282,7 +282,7 @@ async def add_app_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     apps = eval(await redis.get("apps") or '[]')
     apps.append(json_data)
-    await close_redis()
+    await close_redis(redis)
     return web.Response(body=b"{'msg': 'add new version data'}",
             content_type='application/json', status=201)
 
@@ -295,9 +295,9 @@ async def del_app_api(request):
         if app['version'] == version:
             apps.remove(app)
             await redis.set("apps", str(apps))
-            await close_redis()
+            await close_redis(redis)
             return web.json_response({})
-    await close_redis()
+    await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=404)
 
 api.router.add_route('GET', '/apartment/', apartment_info_api, name='apartment_info_api')
