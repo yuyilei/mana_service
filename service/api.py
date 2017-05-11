@@ -282,6 +282,7 @@ async def add_app_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     apps = eval(await redis.get("apps") or '[]')
     apps.append(json_data)
+    await redis.set("apps", str(apps))
     await close_redis(redis)
     return web.Response(body=b"{'msg': 'add new version data'}",
             content_type='application/json', status=201)
@@ -295,6 +296,50 @@ async def del_app_api(request):
         if app['version'] == version:
             apps.remove(app)
             await redis.set("apps", str(apps))
+            await close_redis(redis)
+            return web.json_response({})
+    await close_redis(redis)
+    return web.Response(body=b'{}', content_type='application/json', status=404)
+
+async def patch_get_api(request):
+    """
+    key: patches
+    value: [{ "name": "", "update": "", "version": "", "download": "", "intro": "" }]
+    """
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    patches = eval(await redis.get("patches") or '[]')
+    await close_redis(redis)
+    return web.json_response(patches)
+
+async def get_latest_patch_api(request):
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    patches = await redis.get("patches")
+    await close_redis(redis)
+    if patches:
+        apps_list = eval(patches)
+        return web.json_response(apps_list[-1])
+    return web.json_response({})
+
+@require_admin_login
+async def add_patch_api(request):
+    json_data = await request.json()
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    patches = eval(await redis.get("patches") or '[]')
+    patches.append(json_data)
+    await redis.set("patches", str(patches))
+    await close_redis(redis)
+    return web.Response(body=b"{'msg': 'add new version data'}",
+            content_type='application/json', status=201)
+
+@require_admin_login
+async def del_patch_api(request):
+    version = request.match_info.get('version')
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    patches = eval(await redis.get("patches") or '[]')
+    for patch in patches:
+        if patch['version'] == version:
+            patches.remove(patch)
+            await redis.set("patches", str(patches))
             await close_redis(redis)
             return web.json_response({})
     await close_redis(redis)
@@ -316,3 +361,7 @@ api.router.add_route('GET', '/app/', app_get_api, name='app_get_api')
 api.router.add_route('GET', '/app/latest/', get_latest_app_api, name='get_latest_app_api')
 api.router.add_route('POST', '/app/', add_app_api, name='add_app_api')
 api.router.add_route('DELETE', '/app/{version}/', del_app_api, name='del_app_api')
+api.router.add_route('GET', '/patch/', patch_get_api, name='patch_get_api')
+api.router.add_route('GET', '/patch/latest/', get_latest_patch_api, name='get_latest_patch_api')
+api.router.add_route('POST', '/patch/', add_patch_api, name='add_patch_api')
+api.router.add_route('DELETE', '/patch/{version}/', del_patch_api, name='del_patch_api')
