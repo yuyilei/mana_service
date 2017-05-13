@@ -28,7 +28,7 @@ def test_mana_api(app):
                         'url': 'https://muxixyz.com',
                         'num': '1'
                 }
-                resp = await client.post('/api/banner/', data=json.dumps(post_data), headers=auth_header)
+                resp = await client.post('/api/ios/banner/', data=json.dumps(post_data), headers=auth_header)
                 assert resp.status == 201
                 print('... test banner post api [OK]')
 
@@ -39,20 +39,20 @@ def test_mana_api(app):
                         'img': 'https://y.gtimg.cn/music/photo_new/T002R300x300M000001Fk5RB3SErqf.jpg',
                         'num': '2'
                 }
-                resp = await client.put('/api/banner/', data=json.dumps(post_data), headers=auth_header)
+                resp = await client.put('/api/ios/banner/', data=json.dumps(post_data), headers=auth_header)
                 assert resp.status == 200
                 print('... test banner update api [OK]')
 
             async def _test_banner_get_api():
                 nonlocal client
-                resp = await client.get('/api/banner/')
+                resp = await client.get('/api/ios/banner/')
                 assert resp.status == 200
                 print('... test banner get api [OK]')
 
             async def _test_banner_del_api():
                 nonlocal client
                 auth_header = await get_auth_header()
-                resp = await client.delete('/api/banner/?name=%s' % \
+                resp = await client.delete('/api/ios/banner/?name=%s' % \
                         'https://y.gtimg.cn/music/photo_new/T002R300x300M000001Fk5RB3SErqf.jpg',
                         headers=auth_header)
                 assert resp.status == 200
