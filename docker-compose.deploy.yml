@@ -5,7 +5,7 @@ mana_api:
         - container.env
     command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
     ports:
-        - "5577:8080"
+        - "8888:8080"
     # links:
     #     - redis1
 
