@@ -270,7 +270,9 @@ async def calendar_get_api(request):
 async def calendar_update_api(request):
     json_data = await request.json()
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
-    await redis.set('calendar', str(json_data.update({'update': int(str(time.time()).split('.')[0])})))
+    update = int(str(time.time()).split('.')[0])
+    json_data.update({'update': update}) # return value...
+    await redis.set('calendar', str(json_data))
     await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
