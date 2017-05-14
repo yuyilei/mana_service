@@ -155,7 +155,7 @@ async def product_add_api(request):
     products = await redis.get('products') or '{"_products": []}'
     products_dict = eval(products)
     products_dict['_products'].append(json_data)
-    products_dict['update'] = time.time().split('.')[0]
+    products_dict['update'] = str(time.time()).split('.')[0]
     await redis.set('products', str(products_dict))
     await redis.save()
     await close_redis(redis)
@@ -172,7 +172,7 @@ async def product_del_api(request):
         if p.get('name') == product:
             products_list.remove(p)
             products_dict['_products'] = products_list
-            products_dict['update'] = time.time().split('.')[0]
+            products_dict['update'] = str(time.time()).split('.')[0]
             await redis.set('products', str(products_dict))
             await redis.save()
             await close_redis(redis)
@@ -204,7 +204,7 @@ async def banner_get_api(request):
 async def banner_add_api(request):
     json_data = await request.json()
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
-    update = time.time().split('.')[0]
+    update = str(time.time()).split('.')[0]
     json_data.update({'update': update})
     banners = await redis.get('banners')
     banners_dict = eval(banners or "{'_banners': []}")
@@ -270,7 +270,7 @@ async def calendar_get_api(request):
 async def calendar_update_api(request):
     json_data = await request.json()
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
-    await redis.set('calendar', str(json_data.update({'update': time.time().split('.')[0]})))
+    await redis.set('calendar', str(json_data.update({'update': str(time.time()).split('.')[0]})))
     await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
@@ -293,7 +293,7 @@ async def start_get_api(request):
 async def start_update_api(request):
     json_data = await request.json()
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
-    update = time.time().split('.')[0]
+    update = str(time.time()).split('.')[0]
     await redis.set('start', str(json_data.update({'update': update})))
     await redis.save()
     await close_redis(redis)
