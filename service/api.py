@@ -133,7 +133,7 @@ async def product_get_api(request):
     key: products
     value:
         {
-            "_products": [{
+            "_product": [{
                 "name": "产品名称",
                 "icon": "学而icon七牛外链",
                 "url": "产品url",
@@ -145,8 +145,11 @@ async def product_get_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     products = await redis.get('products') or '{}'
     products_dict = eval(products)
+    products_dict['_product'] = products_dict['_products']
+    product_dict = dict.copy(products_dict)
+    del product_dict['_products']
     await close_redis(redis)
-    return web.json_response(products_dict)
+    return web.json_response(product_dict)
 
 @require_admin_login
 async def product_add_api(request):
