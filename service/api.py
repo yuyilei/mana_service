@@ -5,7 +5,6 @@ import aioredis
 from aiohttp import web
 from aiohttp.web import Response
 from .decorator import require_admin_login
-from . import loop
 
 REDISHOST = os.environ.get('REDISHOST') or 'redis1'
 REDISPORT = int(os.environ.get('REDISPORT')) or 7384
@@ -167,8 +166,6 @@ async def product_add_api(request):
 
 @require_admin_login
 async def product_del_api(request):
-
-
     product = request.rel_url.query['name']
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     products = await redis.get('products') or '{}'
@@ -194,7 +191,34 @@ async def iosconfig_get_api(request):
     """
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     ios_config = await redis.get('ios_config')
+    await close_redis(redis)
     return web.json_response(data={'config': str(eval(ios_config))})
+
+@require_admin_login
+async def iosconfig_add_api(request):
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    ios_config = await redis.get('ios_config')
+    if ios_config:
+        return web.json_response(data={'msg': 'ios configuration already uploaded'})
+    json_data = await request.json()
+    new_config = json_data['config']
+    await redis.set('ios_config', new_config)
+    await redis.save()
+    await close_redis(redis)
+    return web.json_response(data={}, status=201)
+
+@require_admin_login
+async def iosconfig_update_api(request):
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    ios_config = await redis.get('ios_config')
+    if not ios_config:
+        return web.json_response(data={}, status=404)
+    json_data = await request.json()
+    new_config = json_data['config']
+    await redis.set('ios_config', new_config)
+    await redis.save()
+    await close_redis(redis)
+    return web.json_response(data={}, status=200)
 
 async def banner_get_api(request):
     """
@@ -307,6 +331,7 @@ async def start_get_api(request):
     await close_redis(redis)
     return web.json_response(start)
 
+
 @require_admin_login
 async def start_update_api(request):
     json_data = await request.json()
@@ -336,6 +361,7 @@ async def get_latest_app_api(request):
         apps_list = eval(apps)
         return web.json_response(apps_list[-1])
     return web.json_response({})
+
 
 @require_admin_login
 async def add_app_api(request):
@@ -412,6 +438,8 @@ api.router.add_route('GET', '/product/', product_get_api, name='product_get_api'
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
 api.router.add_route('DELETE', '/product/', product_del_api, name='product_del_api')
 api.router.add_route('GET', '/ios/config/', iosconfig_get_api, name='iosconfig_get_api')
+api.router.add_route('POST', '/ios/config/', iosconfig_add_api, name='iosconfig_add_api')
+api.router.add_route('PUT', '/ios/config/', iosconfig_update_api, name='iosconfig_update_api')
 api.router.add_route('GET', '/ios/banner/', banner_get_api, name='banner_get_api')
 api.router.add_route('POST', '/ios/banner/', banner_add_api, name='banner_add_api')
 api.router.add_route('DELETE', '/ios/banner/', banner_del_api, name='banner_del_api')
