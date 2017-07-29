@@ -5,9 +5,10 @@ import aioredis
 from aiohttp import web
 from aiohttp.web import Response
 from .decorator import require_admin_login
+from . import loop
 
-REDISHOST = os.getenv('REDISHOST') or 'redis1'
-REDISPORT = int(os.getenv('REDISPORT') or '7384')
+REDISHOST = os.environ.get('REDISHOST') or 'redis1'
+REDISPORT = int(os.environ.get('REDISPORT')) or 7384
 
 api = web.Application()
 
@@ -133,7 +134,7 @@ async def product_get_api(request):
     key: products
     value:
         {
-            "_product": [{
+            "_products": [{
                 "name": "产品名称",
                 "icon": "学而icon七牛外链",
                 "url": "产品url",
@@ -142,7 +143,7 @@ async def product_get_api(request):
             "update": "1234.5"
         }
     """
-    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT), loop=loop)
     products = await redis.get('products') or '{}'
     products_dict = eval(products)
     products_dict['_product'] = products_dict['_products']
@@ -166,6 +167,8 @@ async def product_add_api(request):
 
 @require_admin_login
 async def product_del_api(request):
+
+
     product = request.rel_url.query['name']
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     products = await redis.get('products') or '{}'
@@ -182,6 +185,16 @@ async def product_del_api(request):
             return web.json_response({})
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=404)
+
+async def iosconfig_get_api(request):
+    """
+    key: ios_config
+    value:
+        {"config": {'k1':'v1', 'k2':'v2'}}    # ios json配置
+    """
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    ios_config = await redis.get('ios_config')
+    return web.json_response(data={'config': str(eval(ios_config))})
 
 async def banner_get_api(request):
     """
@@ -398,6 +411,7 @@ api.router.add_route('GET', '/site/', website_info_api, name='website_info_api')
 api.router.add_route('GET', '/product/', product_get_api, name='product_get_api')
 api.router.add_route('PUT', '/product/', product_add_api, name='product_add_api')
 api.router.add_route('DELETE', '/product/', product_del_api, name='product_del_api')
+api.router.add_route('GET', '/ios/config/', iosconfig_get_api, name='iosconfig_get_api')
 api.router.add_route('GET', '/ios/banner/', banner_get_api, name='banner_get_api')
 api.router.add_route('POST', '/ios/banner/', banner_add_api, name='banner_add_api')
 api.router.add_route('DELETE', '/ios/banner/', banner_del_api, name='banner_del_api')
