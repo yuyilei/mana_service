@@ -202,7 +202,7 @@ async def iosconfig_add_api(request):
         return web.json_response(data={'msg': 'ios configuration already uploaded'})
     json_data = await request.json()
     new_config = json_data['config']
-    await redis.set('ios_config', str(new_config)
+    await redis.set('ios_config', str(new_config))
     await redis.save()
     await close_redis(redis)
     return web.json_response(data={}, status=201)
