@@ -142,7 +142,7 @@ async def product_get_api(request):
             "update": "1234.5"
         }
     """
-    redis = await aioredis.create_redis((REDISHOST, REDISPORT), loop=loop)
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     products = await redis.get('products') or '{}'
     products_dict = eval(products)
     products_dict['_product'] = products_dict['_products']
@@ -192,7 +192,7 @@ async def iosconfig_get_api(request):
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     ios_config = await redis.get('ios_config')
     await close_redis(redis)
-    return web.json_response(data={'config': str(eval(ios_config))})
+    return web.json_response(data={'config': eval(ios_config)})
 
 @require_admin_login
 async def iosconfig_add_api(request):
@@ -202,7 +202,7 @@ async def iosconfig_add_api(request):
         return web.json_response(data={'msg': 'ios configuration already uploaded'})
     json_data = await request.json()
     new_config = json_data['config']
-    await redis.set('ios_config', new_config)
+    await redis.set('ios_config', str(new_config)
     await redis.save()
     await close_redis(redis)
     return web.json_response(data={}, status=201)
@@ -215,7 +215,7 @@ async def iosconfig_update_api(request):
         return web.json_response(data={}, status=404)
     json_data = await request.json()
     new_config = json_data['config']
-    await redis.set('ios_config', new_config)
+    await redis.set('ios_config', str(new_config))
     await redis.save()
     await close_redis(redis)
     return web.json_response(data={}, status=200)
