@@ -318,6 +318,7 @@ async def calendar_get_api(request):
     await close_redis(redis)
     return web.json_response(eval(calendar))
 
+
 @require_admin_login
 async def calendar_update_api(request):
     json_data = await request.json()
@@ -328,6 +329,90 @@ async def calendar_update_api(request):
     await redis.save()
     await close_redis(redis)
     return web.Response(body=b'{}', content_type='application/json', status=201)
+
+
+async def msg_get_api(request):
+    """
+    key: request
+    value: {
+     "msg" : string   //  简略信息
+     "detail" : string  // 详细信息
+     "version" : string    // 版本信息
+     "type" : string    // 信息类型
+     "time" : string  // 2018-02-24   更新时间
+     "update" : int    // 更新的时间戳
+    }
+    """
+    defaultmsg = {
+       "msg" : "" ,
+       "detail" :"",
+       "version" : "",
+       "type" : "",
+       "time" :"" ,
+       "update" : ""
+    }
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    msg = await redis.get('msgs')
+    if msg is None :
+        msg = defaultmsg
+    else :
+        msg = eval(msg)
+    await close_redis(redis)
+    return web.json_response(msg)
+
+
+@require_admin_login
+async def msg_update_api(request):
+    """
+     key: request
+     value: {
+      "msg" : string   //  简略信息
+      "detail" : string  // 详细信息
+      "version" : string    // 版本信息
+      "type" : string    // 信息类型
+      "time" : string  // 2018-02-24   更新时间
+     }
+     """
+    json_data = await request.json()
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    update = int(str(time.time()).split('.')[0])
+    json_data.update({'update': update})
+    await redis.set('msgs', str(json_data))
+    await redis.save()
+    await close_redis(redis)
+    return web.Response(body=b'{}', content_type='application/json', status=200)
+
+
+@require_admin_login
+async def msg_del_api(request):
+    """
+     key: request
+     url param: msg
+    """
+    msg_ = request.rel_url.query['msg']  # 待删除msg的简略信息
+    redis = await aioredis.create_redis((REDISHOST, REDISPORT))
+    msg = await redis.get('msgs')
+    if msg is None :
+        return web.Response(body=b'{}', content_type='application/json', status=404)
+    msg_dict = eval(msg)
+    msg_detail = msg_dict.get('msg')
+    if msg_detail != msg_ :
+        return web.Response(body=b'{}', content_type='application/json', status=404)
+
+    defaultmsg = {
+        "msg": "",
+        "detail": "",
+        "version": "",
+        "type": "",
+        "time": "",
+        "update": ""
+    }
+    await  redis.set('msgs',str(defaultmsg))
+    await  redis.save()
+    await  close_redis(redis)
+
+    return web.Response(body=b'{}', content_type='application/json', status=200)
+
 
 async def start_get_api(request):
     """
@@ -468,3 +553,6 @@ api.router.add_route('GET', '/patch/', patch_get_api, name='patch_get_api')
 api.router.add_route('GET', '/patch/latest/', get_latest_patch_api, name='get_latest_patch_api')
 api.router.add_route('POST', '/patch/', add_patch_api, name='add_patch_api')
 api.router.add_route('DELETE', '/patch/{version}/', del_patch_api, name='del_patch_api')
+api.router.add_route('GET', '/msg/', msg_get_api, name='msg_get_api')
+api.router.add_route('POST', '/msg/', msg_update_api, name='msg_update_api')
+api.router.add_route('DELETE', '/msg/', msg_del_api, name='msg_del_api')
