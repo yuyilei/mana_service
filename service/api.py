@@ -349,7 +349,7 @@ async def msg_get_api(request):
        "version" : "",
        "type" : "",
        "time" :"" ,
-       "update" : ""
+       "update" : 0, 
     }
     redis = await aioredis.create_redis((REDISHOST, REDISPORT))
     msg = await redis.get('msgs')
@@ -405,7 +405,7 @@ async def msg_del_api(request):
         "version": "",
         "type": "",
         "time": "",
-        "update": ""
+        "update": 0,
     }
     await  redis.set('msgs',str(defaultmsg))
     await  redis.save()
